@@ -440,6 +440,10 @@ function printFromObj(printer: Printer, namespace: string, message: DescriptorPr
     const withUppercase = uppercaseFirst(camelCaseName);
     // TODO: does this work for nested types???
     if (fieldDesc.getType() === FieldDescriptorProto.Type.TYPE_MESSAGE) {
+      // TODO: get this to actually work
+      if (fieldDesc.getTypeName() === ".google.protobuf.Timestamp") {
+        return;
+      }
       codePrinter.printLn(`if (obj.${camelCaseName}) {`)
         .indent().printLn(`out.set${withUppercase}(FromObject.${namespace}${fieldDesc.getTypeName()}(obj.${camelCaseName}));`)
       .dedent().printLn("}");

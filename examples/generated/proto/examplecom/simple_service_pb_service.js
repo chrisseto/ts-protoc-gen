@@ -14,9 +14,6 @@ FromObject.google_protobuf_empty_pb = {};
 FromObject.proto_examplecom_simple_service_pb.UnaryRequest = function(obj) {
   var out = new proto_examplecom_simple_service_pb.UnaryRequest();
   out.setSomeInt64(obj.someInt64);
-  if (obj.someTimestamp) {
-    out.setSomeTimestamp(FromObject.proto_examplecom_simple_service_pb.google.protobuf.Timestamp(obj.someTimestamp));
-  }
   return out;
 };
 
