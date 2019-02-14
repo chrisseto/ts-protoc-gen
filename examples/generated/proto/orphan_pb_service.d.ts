@@ -4,6 +4,13 @@
 import * as proto_orphan_pb from "../proto/orphan_pb";
 import {grpc} from "grpc-web-client";
 
+export interface FromObject {
+  OrphanMapMessage(obj: proto_orphan_pb.OrphanMapMessage.AsObject): proto_orphan_pb.OrphanMapMessage;
+  OrphanMessage(obj: proto_orphan_pb.OrphanMessage.AsObject): proto_orphan_pb.OrphanMessage;
+  OrphanUnaryRequest(obj: proto_orphan_pb.OrphanUnaryRequest.AsObject): proto_orphan_pb.OrphanUnaryRequest;
+  OrphanStreamRequest(obj: proto_orphan_pb.OrphanStreamRequest.AsObject): proto_orphan_pb.OrphanStreamRequest;
+}
+
 type OrphanServiceDoUnary = {
   readonly methodName: string;
   readonly service: typeof OrphanService;
@@ -77,7 +84,7 @@ export class OrphanServicePromisesClient {
 
   constructor(serviceHost: string, options?: grpc.RpcOptions);
   doUnary(
-    requestMessage: proto_orphan_pb.OrphanUnaryRequest,
-  ): Promise<proto_orphan_pb.OrphanMessage>;
+    requestMessage: proto_orphan_pb.OrphanUnaryRequest.AsObject,
+  ): Promise<proto_orphan_pb.OrphanMessage.AsObject>;
 }
 

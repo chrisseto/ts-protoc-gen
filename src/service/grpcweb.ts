@@ -1,9 +1,17 @@
-import {filePathToPseudoNamespace, normaliseFieldObjectName, replaceProtoSuffix, getPathToRoot} from "../util";
+import {
+  filePathToPseudoNamespace,
+  getPathToRoot,
+  normaliseFieldObjectName,
+  replaceProtoSuffix, snakeToCamel, uppercaseFirst
+} from "../util";
 import {ExportMap} from "../ExportMap";
 import {Printer} from "../Printer";
 import {CodePrinter} from "../CodePrinter";
 import {
-  FileDescriptorProto, MethodDescriptorProto,
+  DescriptorProto,
+  FieldDescriptorProto,
+  FileDescriptorProto,
+  MethodDescriptorProto,
   ServiceDescriptorProto
 } from "google-protobuf/google/protobuf/descriptor_pb";
 import {WellKnownTypesMap} from "../WellKnown";
@@ -174,6 +182,21 @@ function generateTypescriptDefinition(fileDescriptor: FileDescriptorProto, expor
   printer.printLn(`import {grpc} from "grpc-web-client";`);
   printer.printEmptyLn();
 
+  // FromObject definitions.
+  const codePrinter = new CodePrinter(0, printer);
+  codePrinter.printLn("export interface FromObject {")
+    .indent();
+  // TODO(vilterp): figure out this import stuff
+  const imp = serviceDescriptor.imports[0];
+  const impNamespace = imp.namespace;
+  fileDescriptor.getMessageTypeList().forEach(messageDescriptor => {
+    const msgName = messageDescriptor.getName();
+    codePrinter.printLn(`${msgName}(obj: ${impNamespace}.${msgName}.AsObject): ${impNamespace}.${msgName};`);
+  });
+  codePrinter
+    .dedent().printLn("}")
+    .printEmptyLn();
+
   // Services.
   serviceDescriptor.services
     .forEach(service => {
@@ -262,6 +285,20 @@ function generateJavaScript(fileDescriptor: FileDescriptorProto, exportMap: Expo
       printer.printLn(`var ${importDescriptor.namespace} = require("${importDescriptor.path}");`);
     });
   printer.printLn(`var grpc = require("grpc-web-client").grpc;`);
+  printer.printEmptyLn();
+
+  // FromObject methods.
+  printer.printLn("var FromObject = {};");
+  serviceDescriptor.imports.forEach(importDesc => {
+    printer.printLn(`FromObject.${importDesc.namespace} = {};`);
+  });
+  printer.printEmptyLn();
+  // TODO(vilterp): figure out this import stuff
+  const imp = serviceDescriptor.imports[0];
+  fileDescriptor.getMessageTypeList().forEach(messageDescriptor => {
+    printFromObj(printer, imp.namespace, messageDescriptor);
+  });
+  printer.printLn("exports.FromObject = FromObject;");
   printer.printEmptyLn();
 
   // Services.
@@ -377,8 +414,9 @@ function printUnaryStubMethod(printer: CodePrinter, method: RPCMethodDescriptor)
 }
 
 function printUnaryPromiseStubMethod(printer: CodePrinter, method: RPCMethodDescriptor) {
-  printer.printLn(`${method.serviceName}PromisesClient.prototype.${method.nameAsCamelCase} = function ${method.functionName}(requestMessage) {`)
+  printer.printLn(`${method.serviceName}PromisesClient.prototype.${method.nameAsCamelCase} = function ${method.functionName}(requestMessageObj) {`)
     .indent().printLn(`var client = this.client;`)
+             .printLn(`var requestMessage = FromObject.${method.requestType}(requestMessageObj);`)
              .printLn(`return new Promise(function (resolve, reject) {`)
       .indent().printLn(`client.${method.functionName}(requestMessage, function(error, responseMessage) {`)
         .indent().printLn(`if (error !== null) {`)
@@ -389,6 +427,30 @@ function printUnaryPromiseStubMethod(printer: CodePrinter, method: RPCMethodDesc
       .dedent().printLn(`});`)
     .dedent().printLn(`});`)
   .dedent().printLn(`};`);
+}
+
+function printFromObj(printer: Printer, namespace: string, message: DescriptorProto) {
+  const codePrinter = new CodePrinter(0, printer);
+  codePrinter.printLn(`FromObject.${namespace}.${message.getName()} = function(obj) {`)
+    .indent().printLn(`var out = new ${namespace}.${message.getName()}();`);
+  message.getFieldList().forEach(fieldDesc => {
+    const fieldName = fieldDesc.getName();
+    const snakeCaseName = fieldName.toLowerCase();
+    const camelCaseName = snakeToCamel(snakeCaseName);
+    const withUppercase = uppercaseFirst(camelCaseName);
+    // TODO: does this work for nested types???
+    if (fieldDesc.getType() === FieldDescriptorProto.Type.TYPE_MESSAGE) {
+      codePrinter.printLn(`if (obj.${camelCaseName}) {`)
+        .indent().printLn(`out.set${withUppercase}(FromObject.${namespace}${fieldDesc.getTypeName()}(obj.${camelCaseName}));`)
+      .dedent().printLn("}");
+    } else {
+      codePrinter.printLn(`out.set${withUppercase}(obj.${camelCaseName});`);
+    }
+  });
+  codePrinter.printLn("return out;");
+  codePrinter
+    .dedent().printLn("};")
+    .printEmptyLn();
 }
 
 function printServerStreamStubMethod(printer: CodePrinter, method: RPCMethodDescriptor) {
@@ -567,7 +629,7 @@ function printServiceStubTypes(methodPrinter: Printer, service: RPCDescriptor) {
 
 function printUnaryPromiseStubMethodTypes(printer: CodePrinter, method: RPCMethodDescriptor) {
   printer.printLn(`${method.nameAsCamelCase}(`)
-    .indent().printLn(`requestMessage: ${method.requestType},`)
+    .indent().printLn(`requestMessage: ${method.requestType}.AsObject,`)
     .dedent().printLn(`): Promise<${method.responseType}.AsObject>;`);
 }
 

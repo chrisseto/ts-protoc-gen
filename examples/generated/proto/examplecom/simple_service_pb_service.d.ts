@@ -6,6 +6,12 @@ import * as proto_othercom_external_child_message_pb from "../../proto/othercom/
 import * as google_protobuf_empty_pb from "google-protobuf/google/protobuf/empty_pb";
 import {grpc} from "grpc-web-client";
 
+export interface FromObject {
+  UnaryRequest(obj: proto_examplecom_simple_service_pb.UnaryRequest.AsObject): proto_examplecom_simple_service_pb.UnaryRequest;
+  UnaryResponse(obj: proto_examplecom_simple_service_pb.UnaryResponse.AsObject): proto_examplecom_simple_service_pb.UnaryResponse;
+  StreamRequest(obj: proto_examplecom_simple_service_pb.StreamRequest.AsObject): proto_examplecom_simple_service_pb.StreamRequest;
+}
+
 type SimpleServiceDoUnary = {
   readonly methodName: string;
   readonly service: typeof SimpleService;
@@ -120,10 +126,10 @@ export class SimpleServicePromisesClient {
 
   constructor(serviceHost: string, options?: grpc.RpcOptions);
   doUnary(
-    requestMessage: proto_examplecom_simple_service_pb.UnaryRequest,
-  ): Promise<proto_othercom_external_child_message_pb.ExternalChildMessage>;
+    requestMessage: proto_examplecom_simple_service_pb.UnaryRequest.AsObject,
+  ): Promise<proto_othercom_external_child_message_pb.ExternalChildMessage.AsObject>;
   delete(
-    requestMessage: proto_examplecom_simple_service_pb.UnaryRequest,
-  ): Promise<proto_examplecom_simple_service_pb.UnaryResponse>;
+    requestMessage: proto_examplecom_simple_service_pb.UnaryRequest.AsObject,
+  ): Promise<proto_examplecom_simple_service_pb.UnaryResponse.AsObject>;
 }
 

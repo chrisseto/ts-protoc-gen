@@ -4,6 +4,39 @@
 var proto_orphan_pb = require("../proto/orphan_pb");
 var grpc = require("grpc-web-client").grpc;
 
+var FromObject = {};
+FromObject.proto_orphan_pb = {};
+
+FromObject.proto_orphan_pb.OrphanMapMessage = function(obj) {
+  var out = new proto_orphan_pb.OrphanMapMessage();
+  if (obj.primitiveInts) {
+    out.setPrimitiveInts(FromObject.proto_orphan_pb.OrphanMapMessage.PrimitiveIntsEntry(obj.primitiveInts));
+  }
+  return out;
+};
+
+FromObject.proto_orphan_pb.OrphanMessage = function(obj) {
+  var out = new proto_orphan_pb.OrphanMessage();
+  out.setMyString(obj.myString);
+  out.setMyBool(obj.myBool);
+  out.setMyEnum(obj.myEnum);
+  return out;
+};
+
+FromObject.proto_orphan_pb.OrphanUnaryRequest = function(obj) {
+  var out = new proto_orphan_pb.OrphanUnaryRequest();
+  out.setSomeInt64(obj.someInt64);
+  return out;
+};
+
+FromObject.proto_orphan_pb.OrphanStreamRequest = function(obj) {
+  var out = new proto_orphan_pb.OrphanStreamRequest();
+  out.setSomeString(obj.someString);
+  return out;
+};
+
+exports.FromObject = FromObject;
+
 var OrphanService = (function () {
   function OrphanService() {}
   OrphanService.serviceName = "OrphanService";
@@ -110,14 +143,15 @@ function OrphanServicePromisesClient(serviceHost, options) {
   this.client = new OrphanServiceClient(serviceHost, options);
 }
 
-OrphanServicePromisesClient.prototype.doUnary = function doUnary(requestMessage) {
+OrphanServicePromisesClient.prototype.doUnary = function doUnary(requestMessageObj) {
   var client = this.client;
+  var requestMessage = FromObject.proto_orphan_pb.OrphanUnaryRequest(requestMessageObj);
   return new Promise(function (resolve, reject) {
     client.doUnary(requestMessage, function(error, responseMessage) {
       if (error !== null) {
         reject(error);
       } else {
-        resolve(responseMessage);
+        resolve(responseMessage.toObject());
       }
     });
   });

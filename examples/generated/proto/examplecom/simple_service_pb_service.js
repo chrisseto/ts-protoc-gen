@@ -6,6 +6,33 @@ var proto_othercom_external_child_message_pb = require("../../proto/othercom/ext
 var google_protobuf_empty_pb = require("google-protobuf/google/protobuf/empty_pb");
 var grpc = require("grpc-web-client").grpc;
 
+var FromObject = {};
+FromObject.proto_examplecom_simple_service_pb = {};
+FromObject.proto_othercom_external_child_message_pb = {};
+FromObject.google_protobuf_empty_pb = {};
+
+FromObject.proto_examplecom_simple_service_pb.UnaryRequest = function(obj) {
+  var out = new proto_examplecom_simple_service_pb.UnaryRequest();
+  out.setSomeInt64(obj.someInt64);
+  if (obj.someTimestamp) {
+    out.setSomeTimestamp(FromObject.proto_examplecom_simple_service_pb.google.protobuf.Timestamp(obj.someTimestamp));
+  }
+  return out;
+};
+
+FromObject.proto_examplecom_simple_service_pb.UnaryResponse = function(obj) {
+  var out = new proto_examplecom_simple_service_pb.UnaryResponse();
+  return out;
+};
+
+FromObject.proto_examplecom_simple_service_pb.StreamRequest = function(obj) {
+  var out = new proto_examplecom_simple_service_pb.StreamRequest();
+  out.setSomeString(obj.someString);
+  return out;
+};
+
+exports.FromObject = FromObject;
+
 var SimpleService = (function () {
   function SimpleService() {}
   SimpleService.serviceName = "examplecom.SimpleService";
@@ -256,14 +283,15 @@ function SimpleServicePromisesClient(serviceHost, options) {
   this.client = new SimpleServiceClient(serviceHost, options);
 }
 
-SimpleServicePromisesClient.prototype.doUnary = function doUnary(requestMessage) {
+SimpleServicePromisesClient.prototype.doUnary = function doUnary(requestMessageObj) {
   var client = this.client;
+  var requestMessage = FromObject.proto_examplecom_simple_service_pb.UnaryRequest(requestMessageObj);
   return new Promise(function (resolve, reject) {
     client.doUnary(requestMessage, function(error, responseMessage) {
       if (error !== null) {
         reject(error);
       } else {
-        resolve(responseMessage);
+        resolve(responseMessage.toObject());
       }
     });
   });
@@ -272,14 +300,15 @@ SimpleServicePromisesClient.prototype.doUnary = function doUnary(requestMessage)
 
 
 
-SimpleServicePromisesClient.prototype.delete = function pb_delete(requestMessage) {
+SimpleServicePromisesClient.prototype.delete = function pb_delete(requestMessageObj) {
   var client = this.client;
+  var requestMessage = FromObject.proto_examplecom_simple_service_pb.UnaryRequest(requestMessageObj);
   return new Promise(function (resolve, reject) {
     client.pb_delete(requestMessage, function(error, responseMessage) {
       if (error !== null) {
         reject(error);
       } else {
-        resolve(responseMessage);
+        resolve(responseMessage.toObject());
       }
     });
   });
